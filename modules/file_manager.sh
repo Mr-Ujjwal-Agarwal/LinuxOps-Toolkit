@@ -3,103 +3,51 @@
 # ==========================================================
 # LinuxOps Toolkit
 # Module  : File Management
-# Version : 1.0.0
-# Author  : Ujjwal Agarwal
+# Version : 2.0.0
 # ==========================================================
+
+source utils/colors.sh
+source utils/ui.sh
+source utils/validator.sh
+source utils/logger.sh
+source utils/loader.sh
+
+MODULE_NAME="FILE_MANAGER"
 
 # ==========================================================
 # Helper Functions
 # ==========================================================
 
-FILE_LOG="$REPORT_DIR/linuxops.log"
-
-file_log() {
-
-    local action="$1"
-    local target="$2"
-
-    mkdir -p "$REPORT_DIR"
-
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] | $action | $target" >> "$FILE_LOG"
-}
-
-file_confirm() {
+confirm_action() {
 
     local message="$1"
 
     echo
     warning "$message"
 
-    read -rp "Continue? (y/n): " confirm
+    read -rp "Continue? (y/n): " choice
 
-    case "$confirm" in
+    validate_yes_no "$choice"
 
-        y|Y)
-
-            return 0
-
-            ;;
-
-        *)
-
-            info "Operation cancelled."
-
-            pause_screen
-
-            return 1
-
-            ;;
-
-    esac
+    [[ $? -eq 0 ]]
 
 }
 
-file_directory_exists() {
+log_success_action() {
 
-    [[ -d "$1" ]]
+    local action="$1"
+    local details="$2"
 
-}
-
-file_file_exists() {
-
-    [[ -f "$1" ]]
+    log_success "$MODULE_NAME" "$action" "$details"
 
 }
 
-file_validate_input() {
+log_error_action() {
 
-    local input="$1"
+    local action="$1"
+    local details="$2"
 
-    if [[ -z "$input" ]]
-    then
-
-        error "Input cannot be empty."
-
-        pause_screen
-
-        return 1
-
-    fi
-
-    return 0
-
-}
-
-file_show_header() {
-
-    clear
-
-    title "========================================================"
-
-    title "                FILE MANAGEMENT MODULE"
-
-    title "========================================================"
-
-    echo
-
-    info "Current Directory : $(pwd)"
-
-    echo
+    log_error "$MODULE_NAME" "$action" "$details"
 
 }
 
@@ -109,43 +57,32 @@ file_show_header() {
 
 file_create_directory() {
 
-    file_show_header
-
-    title "Create Directory"
-
-    echo
+    show_module "Create Directory"
 
     read -rp "Directory Path : " directory_path
 
-    file_validate_input "$directory_path" || return
+    validate_not_empty "$directory_path" || return
 
-    if file_directory_exists "$directory_path"
-    then
+    validate_directory_not_exists "$directory_path" || return
 
-        warning "Directory already exists."
-
-        pause_screen
-
-        return
-
-    fi
+    loading "Creating Directory..."
 
     if mkdir -p "$directory_path"
     then
 
         success "Directory created successfully."
 
-        info "Location : $(realpath "$directory_path" 2>/dev/null)"
+        info "$(realpath "$directory_path" 2>/dev/null)"
 
-        file_log "CREATE_DIRECTORY" "$directory_path"
+        log_success_action "CREATE_DIRECTORY" "$directory_path"
 
     else
 
         error "Unable to create directory."
 
-    fi
+        log_error_action "CREATE_DIRECTORY" "$directory_path"
 
-    echo
+    fi
 
     pause_screen
 
@@ -157,52 +94,32 @@ file_create_directory() {
 
 file_delete_directory() {
 
-    file_show_header
-
-    title "Delete Directory"
-
-    echo
+    show_module "Delete Directory"
 
     read -rp "Directory Path : " directory_path
 
-    file_validate_input "$directory_path" || return
+    validate_not_empty "$directory_path" || return
 
-    if ! file_directory_exists "$directory_path"
-    then
+    validate_directory_exists "$directory_path" || return
 
-        error "Directory not found."
+    confirm_action "Delete directory permanently?" || return
 
-        pause_screen
-
-        return
-
-    fi
-
-    file_confirm "This directory and ALL of its contents will be permanently deleted." || return
+    loading "Deleting Directory..."
 
     if rm -rf "$directory_path"
     then
 
-        if ! file_directory_exists "$directory_path"
-        then
+        success "Directory deleted successfully."
 
-            success "Directory deleted successfully."
-
-            file_log "DELETE_DIRECTORY" "$directory_path"
-
-        else
-
-            error "Directory still exists."
-
-        fi
+        log_success_action "DELETE_DIRECTORY" "$directory_path"
 
     else
 
         error "Unable to delete directory."
 
-    fi
+        log_error_action "DELETE_DIRECTORY" "$directory_path"
 
-    echo
+    fi
 
     pause_screen
 
@@ -214,43 +131,32 @@ file_delete_directory() {
 
 file_create_file() {
 
-    file_show_header
-
-    title "Create File"
-
-    echo
+    show_module "Create File"
 
     read -rp "File Path : " file_path
 
-    file_validate_input "$file_path" || return
+    validate_not_empty "$file_path" || return
 
-    if file_file_exists "$file_path"
-    then
+    validate_file_not_exists "$file_path" || return
 
-        warning "File already exists."
-
-        pause_screen
-
-        return
-
-    fi
+    loading "Creating File..."
 
     if touch "$file_path"
     then
 
         success "File created successfully."
 
-        info "Location : $(realpath "$file_path" 2>/dev/null)"
+        info "$(realpath "$file_path" 2>/dev/null)"
 
-        file_log "CREATE_FILE" "$file_path"
+        log_success_action "CREATE_FILE" "$file_path"
 
     else
 
         error "Unable to create file."
 
-    fi
+        log_error_action "CREATE_FILE" "$file_path"
 
-    echo
+    fi
 
     pause_screen
 
@@ -262,43 +168,32 @@ file_create_file() {
 
 file_delete_file() {
 
-    file_show_header
-
-    title "Delete File"
-
-    echo
+    show_module "Delete File"
 
     read -rp "File Path : " file_path
 
-    file_validate_input "$file_path" || return
+    validate_not_empty "$file_path" || return
 
-    if ! file_file_exists "$file_path"
-    then
+    validate_file_exists "$file_path" || return
 
-        error "File not found."
+    confirm_action "Delete file permanently?" || return
 
-        pause_screen
-
-        return
-
-    fi
-
-    file_confirm "This file will be permanently deleted." || return
+    loading "Deleting File..."
 
     if rm -f "$file_path"
     then
 
         success "File deleted successfully."
 
-        file_log "DELETE_FILE" "$file_path"
+        log_success_action "DELETE_FILE" "$file_path"
 
     else
 
         error "Unable to delete file."
 
-    fi
+        log_error_action "DELETE_FILE" "$file_path"
 
-    echo
+    fi
 
     pause_screen
 
@@ -310,38 +205,40 @@ file_delete_file() {
 
 file_copy_file() {
 
-    file_show_header
-
-    title "Copy File"
-
-    echo
+    show_module "Copy File"
 
     read -rp "Source File      : " source_file
-    file_validate_input "$source_file" || return
+    validate_not_empty "$source_file" || return
+    validate_file_exists "$source_file" || return
 
-    if ! file_file_exists "$source_file"
+    read -rp "Destination File : " destination_file
+    validate_not_empty "$destination_file" || return
+
+    if [[ -f "$destination_file" ]]
     then
-        error "Source file does not exist."
-        pause_screen
-        return
+        confirm_action "Destination file exists. Overwrite?" || return
     fi
 
-    read -rp "Destination Path : " destination_file
-    file_validate_input "$destination_file" || return
+    loading "Copying File..."
 
-    if cp "$source_file" "$destination_file"
+    if cp -f "$source_file" "$destination_file"
     then
+
         success "File copied successfully."
 
-        file_log "COPY_FILE" "$source_file -> $destination_file"
+        log_success_action \
+        "COPY_FILE" \
+        "$source_file -> $destination_file"
 
     else
 
-        error "Unable to copy file."
+        error "Failed to copy file."
+
+        log_error_action \
+        "COPY_FILE" \
+        "$source_file"
 
     fi
-
-    echo
 
     pause_screen
 
@@ -353,43 +250,35 @@ file_copy_file() {
 
 file_move_file() {
 
-    file_show_header
-
-    title "Move File"
-
-    echo
+    show_module "Move File"
 
     read -rp "Source File      : " source_file
-    file_validate_input "$source_file" || return
+    validate_not_empty "$source_file" || return
+    validate_file_exists "$source_file" || return
 
-    if ! file_file_exists "$source_file"
-    then
+    read -rp "Destination Path : " destination_path
+    validate_not_empty "$destination_path" || return
 
-        error "Source file not found."
+    loading "Moving File..."
 
-        pause_screen
-
-        return
-
-    fi
-
-    read -rp "Destination Path : " destination_file
-    file_validate_input "$destination_file" || return
-
-    if mv "$source_file" "$destination_file"
+    if mv "$source_file" "$destination_path"
     then
 
         success "File moved successfully."
 
-        file_log "MOVE_FILE" "$source_file -> $destination_file"
+        log_success_action \
+        "MOVE_FILE" \
+        "$source_file -> $destination_path"
 
     else
 
-        error "Unable to move file."
+        error "Failed to move file."
+
+        log_error_action \
+        "MOVE_FILE" \
+        "$source_file"
 
     fi
-
-    echo
 
     pause_screen
 
@@ -401,45 +290,37 @@ file_move_file() {
 
 file_rename_file() {
 
-    file_show_header
+    show_module "Rename File"
 
-    title "Rename File"
+    read -rp "Current File : " current_file
+    validate_not_empty "$current_file" || return
+    validate_file_exists "$current_file" || return
 
-    echo
-
-    read -rp "Current File Path : " current_file
-    file_validate_input "$current_file" || return
-
-    if ! file_file_exists "$current_file"
-    then
-
-        error "File not found."
-
-        pause_screen
-
-        return
-
-    fi
-
-    read -rp "New File Name : " new_name
-    file_validate_input "$new_name" || return
+    read -rp "New Name : " new_name
+    validate_not_empty "$new_name" || return
 
     new_path="$(dirname "$current_file")/$new_name"
+
+    loading "Renaming File..."
 
     if mv "$current_file" "$new_path"
     then
 
         success "File renamed successfully."
 
-        file_log "RENAME_FILE" "$current_file -> $new_path"
+        log_success_action \
+        "RENAME_FILE" \
+        "$current_file -> $new_path"
 
     else
 
-        error "Unable to rename file."
+        error "Failed to rename file."
+
+        log_error_action \
+        "RENAME_FILE" \
+        "$current_file"
 
     fi
-
-    echo
 
     pause_screen
 
@@ -451,28 +332,31 @@ file_rename_file() {
 
 file_search() {
 
-    file_show_header
+    show_module "Search File"
 
-    title "Search File"
+    read -rp "Search Directory : " search_directory
+    validate_not_empty "$search_directory" || return
+    validate_directory_exists "$search_directory" || return
 
-    echo
+    read -rp "File Name : " search_name
+    validate_not_empty "$search_name" || return
 
-    read -rp "Enter File Name : " search_name
+    loading "Searching..."
 
-    file_validate_input "$search_name" || return
-
-    echo
-
-    info "Searching..."
-
-    results=$(find . -iname "*$search_name*" 2>/dev/null)
+    results=$(find "$search_directory" \
+    -iname "*$search_name*" \
+    2>/dev/null)
 
     echo
 
     if [[ -z "$results" ]]
     then
 
-        warning "No files found."
+        warning "No matching files found."
+
+        log_error_action \
+        "SEARCH_FILE" \
+        "$search_name"
 
     else
 
@@ -482,11 +366,11 @@ file_search() {
 
         echo "$results"
 
-        file_log "SEARCH_FILE" "$search_name"
+        log_success_action \
+        "SEARCH_FILE" \
+        "$search_name"
 
     fi
-
-    echo
 
     pause_screen
 
@@ -498,43 +382,35 @@ file_search() {
 
 file_change_permission() {
 
-    file_show_header
-
-    title "Change File Permission"
-
-    echo
+    show_module "Permission Manager"
 
     read -rp "File Path : " file_path
+    validate_not_empty "$file_path" || return
+    validate_file_exists "$file_path" || return
 
-    file_validate_input "$file_path" || return
+    read -rp "Permission (000-777) : " permission
+    validate_permission "$permission" || return
 
-    if ! file_file_exists "$file_path"
-    then
-
-        error "File not found."
-
-        pause_screen
-
-        return
-
-    fi
-
-    read -rp "Permission (Example 755): " permission
+    loading "Updating Permission..."
 
     if chmod "$permission" "$file_path"
     then
 
-        success "Permission updated successfully."
+        success "Permission updated."
 
-        file_log "CHANGE_PERMISSION" "$file_path ($permission)"
+        log_success_action \
+        "CHANGE_PERMISSION" \
+        "$file_path ($permission)"
 
     else
 
-        error "Unable to change permission."
+        error "Permission update failed."
+
+        log_error_action \
+        "CHANGE_PERMISSION" \
+        "$file_path"
 
     fi
-
-    echo
 
     pause_screen
 
@@ -546,55 +422,26 @@ file_change_permission() {
 
 file_information() {
 
-    file_show_header
-
-    title "File Information"
-
-    echo
+    show_module "File Information"
 
     read -rp "File Path : " file_path
-
-    file_validate_input "$file_path" || return
-
-    if ! file_file_exists "$file_path"
-    then
-
-        error "File not found."
-
-        pause_screen
-
-        return
-
-    fi
+    validate_not_empty "$file_path" || return
+    validate_file_exists "$file_path" || return
 
     echo
 
     stat "$file_path"
 
-    echo
-
-    file_log "VIEW_INFORMATION" "$file_path"
-
-    pause_screen
-
-}
-
-# ==========================================================
-# File Feature Pending
-# ==========================================================
-
-file_feature_pending() {
-
-    warning "Feature under development."
-
-    echo
+    log_success_action \
+    "FILE_INFORMATION" \
+    "$file_path"
 
     pause_screen
 
 }
 
 # ==========================================================
-# File Management Dashboard
+# File Management Menu
 # ==========================================================
 
 file_manager_menu() {
@@ -602,200 +449,89 @@ file_manager_menu() {
     while true
     do
 
-        file_show_header
+        show_module "File Management"
 
-        echo "1.  Create Directory"
-        echo "2.  Delete Directory"
-        echo "3.  Create File"
-        echo "4.  Delete File"
-        echo "5.  Copy File"
-        echo "6.  Move File"
-        echo "7.  Rename File"
-        echo "8.  Search File"
-        echo "9.  Change Permission"
-        echo "10. File Information"
-        echo
-        echo "11. Back to Main Menu"
+        show_menu_option 1  "Create Directory"
+        show_menu_option 2  "Delete Directory"
+        show_menu_option 3  "Create File"
+        show_menu_option 4  "Delete File"
+        show_menu_option 5  "Copy File"
+        show_menu_option 6  "Move File"
+        show_menu_option 7  "Rename File"
+        show_menu_option 8  "Search File"
+        show_menu_option 9  "Change Permission"
+        show_menu_option 10 "File Information"
 
-        echo
+        separator
 
-        read -rp "Choose Option : " option
+        show_menu_option 0 "Back"
+
+        separator
+
+        read -rp "Select Option : " option
 
         case "$option" in
 
             1)
 
                 file_create_directory
-
                 ;;
 
             2)
 
                 file_delete_directory
-
                 ;;
 
             3)
 
                 file_create_file
-
                 ;;
 
             4)
 
                 file_delete_file
-
                 ;;
 
             5)
 
                 file_copy_file
-
                 ;;
 
             6)
 
                 file_move_file
-
                 ;;
 
             7)
 
                 file_rename_file
-
                 ;;
 
             8)
 
-                file_show_header
-
-                title "Search File"
-
-                echo
-
-                read -rp "Search Directory : " search_directory
-
-                file_validate_input "$search_directory" || continue
-
-                if [[ ! -d "$search_directory" ]]
-                then
-
-                    error "Directory not found."
-
-                    pause_screen
-
-                    continue
-
-                fi
-
-                read -rp "File Name : " search_name
-
-                file_validate_input "$search_name" || continue
-
-                echo
-
-                info "Searching..."
-
-                echo
-
-                results=$(find "$search_directory" -iname "*$search_name*" 2>/dev/null)
-
-                if [[ -z "$results" ]]
-                then
-
-                    warning "No matching files found."
-
-                else
-
-                    success "Search Results"
-
-                    echo
-
-                    echo "$results"
-
-                    file_log "SEARCH_FILE" "$search_directory/$search_name"
-
-                fi
-
-                echo
-
-                pause_screen
-
+                file_search
                 ;;
 
             9)
 
-                file_show_header
-
-                title "Change Permission"
-
-                echo
-
-                read -rp "File Path : " file_path
-
-                file_validate_input "$file_path" || continue
-
-                if ! file_file_exists "$file_path"
-                then
-
-                    error "File not found."
-
-                    pause_screen
-
-                    continue
-
-                fi
-
-                read -rp "Permission (000-777): " permission
-
-                if [[ ! "$permission" =~ ^[0-7]{3}$ ]]
-                then
-
-                    error "Invalid permission."
-
-                    pause_screen
-
-                    continue
-
-                fi
-
-                if chmod "$permission" "$file_path"
-                then
-
-                    success "Permission changed successfully."
-
-                    file_log "CHANGE_PERMISSION" "$file_path"
-
-                else
-
-                    error "Unable to change permission."
-
-                fi
-
-                echo
-
-                pause_screen
-
+                file_change_permission
                 ;;
 
             10)
 
                 file_information
-
                 ;;
 
-            11)
+            0)
 
-                return
-
+                break
                 ;;
 
             *)
 
-                error "Invalid Option."
+                warning "Invalid Option."
 
                 sleep 1
-
                 ;;
 
         esac
@@ -804,4 +540,24 @@ file_manager_menu() {
 
 }
 
+# ==========================================================
+# Module Entry Point
+# ==========================================================
+
+file_manager() {
+
+    file_manager_menu
+
+}
+
+# ==========================================================
+# Execute Directly
+# ==========================================================
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]
+then
+
+    file_manager
+
+fi
 
