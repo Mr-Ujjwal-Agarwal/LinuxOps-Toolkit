@@ -1,10 +1,15 @@
 #!/bin/bash
 
 # ==========================================
+# LinuxOps Toolkit
 # File Management Module
 # ==========================================
 
-create_directory() {
+# ==========================================
+# Create Directory
+# ==========================================
+
+file_create_directory() {
 
     clear
 
@@ -12,30 +17,35 @@ create_directory() {
 
     echo
 
-    read -rp "Enter directory path: " dir
+    read -rp "Enter directory path: " directory
 
-    if [[ -z "$dir" ]]
-    then
+    if [[ -z "$directory" ]]; then
         error "Directory path cannot be empty."
-
         pause_screen
-
         return
     fi
 
-    if mkdir -p "$dir" 2>/dev/null
-    then
+    if [[ -d "$directory" ]]; then
+        warning "Directory already exists."
+        pause_screen
+        return
+    fi
+
+    if mkdir -p "$directory"; then
         success "Directory created successfully."
     else
         error "Failed to create directory."
     fi
 
     echo
-
     pause_screen
 }
 
-delete_directory() {
+# ==========================================
+# Delete Directory
+# ==========================================
+
+file_delete_directory() {
 
     clear
 
@@ -43,141 +53,133 @@ delete_directory() {
 
     echo
 
-    read -rp "Enter directory path: " dir
+    read -rp "Enter directory path: " directory
 
-    if [[ -z "$dir" ]]
-    then
+    if [[ -z "$directory" ]]; then
         error "Directory path cannot be empty."
-
         pause_screen
-
         return
     fi
 
-    if [[ ! -d "$dir" ]]
-    then
+    if [[ ! -d "$directory" ]]; then
         error "Directory does not exist."
-
         pause_screen
-
         return
     fi
 
     echo
+    warning "WARNING!"
+    warning "This operation will permanently delete:"
+    echo "$directory"
+    echo
 
-    warning "Are you sure you want to delete this directory?"
+    read -rp "Continue? (y/n): " confirm
 
-    read -rp "(y/n): " choice
-
-    case "$choice" in
+    case "$confirm" in
 
         y|Y)
 
-            rm -rf "$dir"
-
-            success "Directory deleted successfully."
+            if rm -rf "$directory"; then
+                success "Directory deleted successfully."
+            else
+                error "Failed to delete directory."
+            fi
 
             ;;
 
         *)
 
-            warning "Operation cancelled."
+            info "Operation cancelled."
 
             ;;
 
     esac
 
     echo
+    pause_screen
+}
+
+# ==========================================
+# Placeholder
+# ==========================================
+
+file_feature_pending() {
+
+    echo
+    warning "This feature will be available in the next sprint."
+    echo
 
     pause_screen
 
 }
 
-coming_soon() {
-
-    echo
-
-    warning "Feature under development."
-
-    echo
-
-    pause_screen
-
-}
+# ==========================================
+# File Management Dashboard
+# ==========================================
 
 file_manager_menu() {
 
-while true
-do
+    while true
+    do
 
-clear
+        clear
 
-title "========== File Management =========="
+        title "========== File Management =========="
 
-echo
+        echo
 
-echo "1. Create Directory"
+        echo "1. Create Directory"
+        echo "2. Delete Directory"
+        echo "3. Create File"
+        echo "4. Delete File"
+        echo "5. Copy File"
+        echo "6. Move File"
+        echo "7. Rename File"
+        echo "8. Search File"
+        echo "9. Change Permission"
+        echo "10. File Information"
+        echo "11. Back"
 
-echo "2. Delete Directory"
+        echo
 
-echo "3. Create File"
+        read -rp "Choose an option: " choice
 
-echo "4. Delete File"
+        case "$choice" in
 
-echo "5. Copy File"
+            1)
 
-echo "6. Move File"
+                file_create_directory
 
-echo "7. Rename File"
+                ;;
 
-echo "8. Search File"
+            2)
 
-echo "9. Change Permission"
+                file_delete_directory
 
-echo "10. File Information"
+                ;;
 
-echo "11. Back"
+            3|4|5|6|7|8|9|10)
 
-echo
+                file_feature_pending
 
-read -rp "Choose Option: " choice
+                ;;
 
-case "$choice" in
+            11)
 
-1)
+                return
 
-create_directory
+                ;;
 
-;;
+            *)
 
-2)
+                error "Invalid option."
 
-delete_directory
+                sleep 1
 
-;;
+                ;;
 
-3|4|5|6|7|8|9|10)
+        esac
 
-coming_soon
-
-;;
-
-11)
-
-return
-
-;;
-
-*)
-
-error "Invalid Choice."
-
-sleep 1
-
-;;
-
-esac
-
-done
+    done
 
 }
