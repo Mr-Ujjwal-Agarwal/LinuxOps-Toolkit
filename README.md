@@ -275,9 +275,6 @@ Features include:
 ```
 LinuxOps-Toolkit/
 │
-├── assets/
-│   └── banner.txt
-│
 ├── modules/
 │   ├── about.sh
 │   ├── backup.sh
@@ -299,10 +296,8 @@ LinuxOps-Toolkit/
 │   ├── logger.sh
 │   ├── ui.sh
 │   └── validator.sh
-│
-├── reports/
-├── backups/
-├── config.sh
+├── config
+|      ├── config.sh
 ├── linuxops.sh
 ├── LICENSE
 ├── README.md
@@ -372,14 +367,6 @@ Or
 ```bash
 bash linuxops.sh
 ```
-
----
-
-# 🖥️ Screenshots
-
-> Screenshots will be added after Version 1.0 release.
-
----
 
 # 📊 Toolkit Architecture
 
