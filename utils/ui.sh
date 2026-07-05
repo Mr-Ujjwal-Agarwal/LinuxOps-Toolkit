@@ -1,7 +1,16 @@
 #!/bin/bash
 
-source config/config.sh
+# ==========================================================
+# LinuxOps Toolkit
+# Utility : User Interface
+# Version : 1.0.0
+# ==========================================================
+
 source utils/colors.sh
+
+# ==========================================================
+# Screen Functions
+# ==========================================================
 
 clear_screen() {
 
@@ -9,92 +18,138 @@ clear_screen() {
 
 }
 
-print_banner() {
-
-    title "=============================================================="
+pause_screen() {
 
     echo
-
-    title "               LinuxOps Toolkit v1.0"
-
-    echo
-
-    info "        Professional Linux Administration Suite"
-
-    echo
-
-    title "=============================================================="
-
-    echo
+    read -rp "Press Enter to continue..."
 
 }
 
-system_information() {
+# ==========================================================
+# Banner
+# ==========================================================
 
-    HOST=$(hostname)
+show_banner() {
 
-    USERNAME=$(whoami)
+    clear
 
-    OS=$(grep PRETTY_NAME /etc/os-release | cut -d= -f2 | tr -d '"')
+    separator
 
-    KERNEL=$(uname -r)
+    heading "              LinuxOps Toolkit v1.0"
 
-    UPTIME=$(uptime -p)
+    info "Professional Linux Administration Toolkit"
 
-    CPU=$(top -bn1 | grep "Cpu(s)" | awk '{print $2+$4"%"}')
-
-    RAM=$(free -h | awk '/Mem:/ {print $3 "/" $2}')
-
-    DISK=$(df -h / | awk 'NR==2 {print $5}')
-
-    echo "Hostname : $HOST"
-
-    echo "User     : $USERNAME"
-
-    echo "OS       : $OS"
-
-    echo "Kernel   : $KERNEL"
-
-    echo "Uptime   : $UPTIME"
-
-    echo "CPU      : $CPU"
-
-    echo "RAM      : $RAM"
-
-    echo "Disk     : $DISK"
-
-    echo
+    separator
 
 }
 
-print_menu() {
+# ==========================================================
+# System Information
+# ==========================================================
 
-echo "1. File Management"
+show_system_info() {
 
-echo "2. Backup & Restore"
+    local hostname=$(hostname)
+    local username=$(whoami)
+    local os=$(grep PRETTY_NAME /etc/os-release | cut -d '"' -f2)
+    local kernel=$(uname -r)
+    local uptime=$(uptime -p)
 
-echo "3. Log Analyzer"
+    local cpu=$(top -bn1 | grep "Cpu(s)" | awk '{print $2+$4"%"}')
 
-echo "4. User Management"
+    local ram=$(free -h | awk '/Mem:/ {print $3 " / " $2}')
 
-echo "5. Disk Utilities"
+    local disk=$(df -h / | awk 'NR==2 {print $5}')
 
-echo "6. Process Manager"
+    info "Hostname : $hostname"
+    info "User     : $username"
+    info "OS       : $os"
+    info "Kernel   : $kernel"
+    info "Uptime   : $uptime"
+    info "CPU      : $cpu"
+    info "RAM      : $ram"
+    info "Disk     : $disk"
 
-echo "7. Service Manager"
+    separator
 
-echo "8. Package Manager"
+}
 
-echo "9. Network Utilities"
+# ==========================================================
+# Page
+# ==========================================================
 
-echo "10. System Health"
+show_page() {
 
-echo "11. Security Audit"
+    local page_title="$1"
 
-echo "12. About"
+    clear_screen
 
-echo "13. Exit"
+    show_banner
 
-echo
+    heading "$page_title"
+
+}
+
+# ==========================================================
+# Current Working Directory
+# ==========================================================
+
+show_working_directory() {
+
+    highlight "Current Directory"
+
+    echo
+
+    pwd
+
+    separator
+
+}
+
+# ==========================================================
+# Menu Helpers
+# ==========================================================
+
+show_menu_option() {
+
+    printf "%-3s %s\n" "$1." "$2"
+
+}
+
+show_menu_title() {
+
+    separator
+
+    heading "$1"
+
+    separator
+
+}
+
+# ==========================================================
+# Footer
+# ==========================================================
+
+show_footer() {
+
+    separator
+
+    info "LinuxOps Toolkit v1.0"
+
+    separator
+
+}
+
+# ==========================================================
+# Header For Modules
+# ==========================================================
+
+show_module() {
+
+    local module_name="$1"
+
+    show_page "$module_name"
+
+    show_working_directory
 
 }
