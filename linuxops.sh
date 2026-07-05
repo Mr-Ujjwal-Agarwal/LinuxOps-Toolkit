@@ -13,6 +13,7 @@ source utils/colors.sh
 source utils/ui.sh
 source utils/validator.sh
 source utils/loader.sh
+source utils/logger.sh
 
 # Load Modules
 source modules/file_manager.sh
