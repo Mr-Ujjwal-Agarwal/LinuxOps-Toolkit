@@ -387,7 +387,41 @@ bash linuxops.sh
  Logs           Network        Disk
  Health         Security       System Info
 ```
+# 📸 Screenshots
 
+## Main Dashboard
+
+![Dashboard](ScreenShots/main-dashboard.png)
+
+---
+
+## User Management
+
+![User Management](ScreenShots/user-management.png)
+
+---
+
+## Process Management
+
+![Process Management](ScreenShots/process-management.png)
+
+---
+
+## Network Management
+
+![Network](ScreenShots/network-management.png)
+
+---
+
+## File Management
+
+![Security](ScreenShots/file-management.png)
+
+---
+
+## Health Monitoring
+
+![Health](ScreenShots/linuxops-live-health-monitor.png)
 ---
 
 # 📋 Feature Summary
